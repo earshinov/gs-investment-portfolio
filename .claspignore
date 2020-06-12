@@ -1,0 +1,8 @@
+# Ignore everything
+*
+*/**
+
+# Whitelist
+!.clasp.json
+!appsscript.json
+!dist/index.js

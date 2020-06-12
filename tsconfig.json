@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "strict": true,
+    "types": ["jest", "google-apps-script"]
+  },
+  "include": [
+    "src"
+  ]
+}
