@@ -1,4 +1,4 @@
-import { fetchJson } from './utils';
+import { fetchJson, stripMarks } from './utils';
 
 export namespace yahoo {
 
@@ -23,7 +23,7 @@ export namespace yahoo {
    *   - https://habr.com/ru/post/505674/
    */
   export function getPrice(symbol: string): Price {
-    symbol = translateSymbol(symbol);
+    symbol = translateSymbol(stripMarks(symbol));
 
     let price: Price;
     if (PRICE_CACHE.hasOwnProperty(symbol))
@@ -64,7 +64,7 @@ export namespace yahoo {
    * ```
    */
   export function getSector(symbol: string): SectorAndIndustry {
-    symbol = translateSymbol(symbol);
+    symbol = translateSymbol(stripMarks(symbol));
 
     let data: SectorAndIndustry;
     if (SECTOR_CACHE.hasOwnProperty(symbol))

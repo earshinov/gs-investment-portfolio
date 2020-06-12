@@ -41,3 +41,9 @@ export function fetchJson(url: string): unknown {
 }
 
 // #endregion
+
+const RE_MARKS = /'+$/;
+
+export function stripMarks(symbol: string): string {
+  return symbol.replace(RE_MARKS, '');
+}

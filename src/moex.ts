@@ -26,7 +26,11 @@ export namespace moex {
     if (!boardId)
       throw new Error(`Could not determine board id for security ${JSON.stringify(basicInfo)}`);
 
-    const url = `https://iss.moex.com/iss/engines/stock/markets/${marketName}/boards/${boardId}/securities/${isin}.xml`;
+    const securityId = basicInfo['secid'];
+    if (!securityId)
+      throw new Error(`Could not determine SECID for security ${JSON.stringify(basicInfo)}`);
+
+    const url = `https://iss.moex.com/iss/engines/stock/markets/${marketName}/boards/${boardId}/securities/${securityId}.xml`;
     return getSecurityInfo(url, attributeName);
   }
 
@@ -48,7 +52,7 @@ export namespace moex {
   }
 
   function fetchBasicSecurityInfoByIsin(isin: string): BasicSecurityInfo {
-    const url = `https://iss.moex.com/iss/securities.xml?q=${encodeURIComponent(isin)}`;
+    const url = `https://iss.moex.com/iss/securities.xml?iss.meta=off&iss.only=securities&q=${encodeURIComponent(isin)}`;
     const [xmlText, xmlDoc] = fetchXml(url);
 
     const row = lookup(xmlDoc.getRootElement().getChildren(), data => {
