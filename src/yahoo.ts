@@ -1,4 +1,6 @@
-import { fetchJson, stripMarks } from './utils';
+import { cache } from './cache';
+import { stripMarks } from './utils/app';
+import { fetchJson } from './utils/json';
 
 export namespace yahoo {
 
@@ -6,9 +8,25 @@ export namespace yahoo {
 
   export type Price = number;
 
-  type PriceCache = {[symbol: string]: Price};
+  type PriceBySymbol = {[symbol: string]: Price};
 
-  const PRICE_CACHE: PriceCache = {};
+  class PriceDocumentCache extends cache.SerializingDocumentCache<PriceBySymbol> {
+
+    protected serializeValue(symbol: string, value: number): string {
+      return value.toString();
+    }
+
+    protected deserializeValue(symbol: string, serializedValue: string): number {
+      return Number(serializedValue);
+    }
+  }
+
+  const PRICE_CACHE = new cache.MemoryCache<PriceBySymbol>(
+    new PriceDocumentCache(
+      cache.NullCache.instance
+    ),
+    {}
+  );
 
   /**
    * Get the latest price for the given ticket from Yahoo.Finance, possibly from cache.
@@ -25,14 +43,12 @@ export namespace yahoo {
   export function getPrice(symbol: string): Price {
     symbol = translateSymbol(stripMarks(symbol));
 
-    let price: Price;
-    if (PRICE_CACHE.hasOwnProperty(symbol))
-      price = PRICE_CACHE[symbol];
-    else {
-      price = fetchPrice(symbol);
-      PRICE_CACHE[symbol] = price;
+    let result = PRICE_CACHE.get(symbol);
+    if (result == null) {
+      result = fetchPrice(symbol);
+      PRICE_CACHE.put(symbol, result);
     }
-    return price;
+    return result;
   }
 
   function fetchPrice(symbol: string): Price {
@@ -50,9 +66,9 @@ export namespace yahoo {
     industry: string;
   }
 
-  type SectorCache = {[symbol: string]: SectorAndIndustry};
+  type SectorAndIndustryBySymbol = {[symbol: string]: SectorAndIndustry};
 
-  const SECTOR_CACHE: SectorCache = {};
+  const SECTOR_CACHE = cache.newDefaultJsonCache<SectorAndIndustryBySymbol>({});
 
   /**
    * Get S&P sector and industry by symbol, possibly from cache.
@@ -66,14 +82,12 @@ export namespace yahoo {
   export function getSector(symbol: string): SectorAndIndustry {
     symbol = translateSymbol(stripMarks(symbol));
 
-    let data: SectorAndIndustry;
-    if (SECTOR_CACHE.hasOwnProperty(symbol))
-      data = SECTOR_CACHE[symbol];
-    else {
-      data = fetchSector(symbol);
-      SECTOR_CACHE[symbol] = data;
+    let result = SECTOR_CACHE.get(symbol);
+    if (result == null) {
+      result = fetchSector(symbol);
+      SECTOR_CACHE.put(symbol, result);
     }
-    return data;
+    return result;
   }
 
   function fetchSector(symbol: string): SectorAndIndustry {

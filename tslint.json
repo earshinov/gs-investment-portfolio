@@ -1,5 +1,6 @@
 {
   "extends": ["@earshinov/tslint-rules"],
   "rules": {
+    "no-empty-interface": false
   }
 }

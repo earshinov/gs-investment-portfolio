@@ -33,3 +33,7 @@ function yahooSector(symbol) {
 function yahooIndustry(symbol) {
   return F.yahoo.getSector(symbol).industry;
 }
+
+function onEdit(e) {
+  return F.triggers.onEdit(e);
+}

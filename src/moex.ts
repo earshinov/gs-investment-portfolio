@@ -1,4 +1,6 @@
-import { lookup, fetchXml, getXmlAttributesDict } from './utils';
+import { lookup } from './utils/arrays';
+import { fetchXml, getXmlAttributesDict } from './utils/xml';
+import { cache } from './cache';
 
 export namespace moex {
 
@@ -36,19 +38,17 @@ export namespace moex {
 
   type BasicSecurityInfo = {[key: string]: string};
 
-  type BasicSecurityInfoByIsinCache = {[url: string]: BasicSecurityInfo};
+  type BasicSecurityInfoByIsin = {[isin: string]: BasicSecurityInfo};
 
-  const BASIC_SECURITY_INFO_BY_ISIN_CACHE: BasicSecurityInfoByIsinCache = {};
+  const BASIC_SECURITY_INFO_BY_ISIN_CACHE = cache.newDefaultJsonCache<BasicSecurityInfoByIsin>({});
 
   function getBasicSecurityInfoByIsin(isin: string): BasicSecurityInfo {
-    let data: BasicSecurityInfo;
-    if (BASIC_SECURITY_INFO_BY_ISIN_CACHE.hasOwnProperty(isin))
-      data = BASIC_SECURITY_INFO_BY_ISIN_CACHE[isin];
-    else {
-      data = fetchBasicSecurityInfoByIsin(isin);
-      BASIC_SECURITY_INFO_BY_ISIN_CACHE[isin] = data;
+    let result = BASIC_SECURITY_INFO_BY_ISIN_CACHE.get(isin);
+    if (result == null) {
+      result = fetchBasicSecurityInfoByIsin(isin);
+      BASIC_SECURITY_INFO_BY_ISIN_CACHE.put(isin, result);
     }
-    return data;
+    return result;
   }
 
   function fetchBasicSecurityInfoByIsin(isin: string): BasicSecurityInfo {
@@ -69,9 +69,9 @@ export namespace moex {
 
   export type SecurityInfo = {[key: string]: string};
 
-  type SecurityInfoCache = {[url: string]: SecurityInfo};
+  type SecurityInfoByUrl = {[url: string]: SecurityInfo};
 
-  const SECURITY_INFO_CACHE: SecurityInfoCache = {};
+  const SECURITY_INFO_CACHE = cache.newDefaultJsonCache<SecurityInfoByUrl>({});
 
   /**
    * Gets security info from MOEX API, possibly from cache.
@@ -87,17 +87,14 @@ export namespace moex {
    *   - https://habr.com/ru/post/486716/
    */
   export function getSecurityInfo(url: string, attributeName: string): string {
-    let data: SecurityInfo;
-    if (SECURITY_INFO_CACHE.hasOwnProperty(url))
-      data = SECURITY_INFO_CACHE[url];
-    else {
-      data = fetchSecurityInfo(url);
-      SECURITY_INFO_CACHE[url] = data;
+    let result = SECURITY_INFO_CACHE.get(url);
+    if (result == null) {
+      result = fetchSecurityInfo(url);
+      SECURITY_INFO_CACHE.put(url, result);
     }
-
-    if (!data.hasOwnProperty(attributeName))
-      throw new Error(`No attribute ${attributeName} in security info ${JSON.stringify(data)}`);
-    return data[attributeName];
+    if (!result.hasOwnProperty(attributeName))
+      throw new Error(`No attribute ${attributeName} in security info ${JSON.stringify(result)}`);
+    return result[attributeName];
   }
 
   function fetchSecurityInfo(url: string) {
